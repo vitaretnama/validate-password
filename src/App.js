@@ -13,7 +13,7 @@ function App() {
       confirmPassword: "",
     }
   }
-  
+
   const {
     register,
     getValues,
@@ -57,8 +57,8 @@ function App() {
       { ...register("password", {
         required: "You must specify a password",
         minLength: {
-          value: 12,
-          message: "Password must have at least 12 characters"
+          value: 8,
+          message: "Password must have at least 8 characters"
         }
       })}
       />
@@ -69,7 +69,7 @@ function App() {
       <input 
       name="confirmPassword"
       type="password"
-      {...register("confirmPassword ", {
+      {...register("confirmPassword", {
          validate: (value) => 
           value === getValues().password || "The password does not match",
       })}

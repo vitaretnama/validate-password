@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { ProgressBar } from "react-bootstrap";
-import zxcvbn from "zxcvbn";
 
 export const PasswordComplexity = (
     {valueOfNewPassword}
 ) => {
-    const testResult = zxcvbn(valueOfNewPassword)
-    const num = (testResult.score * 100) / 3
-    
+
     const [passwordValidity, setPasswordValidity] = useState({
         minLength: null,
+        maxLength: null,
         minLowerCase: null,
         minUpperCase: null,
         minNumbers: null,
@@ -21,10 +19,34 @@ export const PasswordComplexity = (
     const oneUpperCase = /^(?=.*?[A-Z])/
     const specialCharacters = /[ !@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/
 
+    const generateScore = () => {
+        const {
+            minLowerCase, 
+            minUpperCase,
+            minNumbers,
+            minSymbol,
+            minLength,
+            maxLength 
+        } = passwordValidity
+
+        if (valueOfNewPassword == "") { return 0 } 
+        let isAlphanumeric = minNumbers && minSymbol && minLowerCase && minUpperCase
+        
+        if ( maxLength && isAlphanumeric ) {
+            return 3
+        } else if ( minLength && isAlphanumeric ) { 
+            return 2
+        }
+        return 1
+    }
 
     useEffect(() => {
+        let isMoreThanMaxLength = valueOfNewPassword.length > 12
+        let isMoreThanMinLength = valueOfNewPassword.length > 8
+
         setPasswordValidity({
-            minLength: valueOfNewPassword?.length >= 12,
+            minLength: isMoreThanMinLength,
+            maxLength: isMoreThanMaxLength,
             minLowerCase: !!oneLowerCase.test(valueOfNewPassword),
             minUpperCase: !!oneUpperCase.test(valueOfNewPassword),
             minNumbers: !!isNumber.test(valueOfNewPassword),
@@ -37,42 +59,41 @@ export const PasswordComplexity = (
     }
 
     const funcProgressLabel = () => {
-        switch (testResult.score) {
-            case 0 :
-                return "Very Weak";
-            case 1 :
+        let score = generateScore()
+        switch (score) {
+            case 0,1 :
                 return "Weak";
             case 2 : 
                 return "Good";
             case 3 :
                 return "Strong";
             default:
-                return "none"
+                return ""
         }
     }
 
     const funcProgressColor = () => {
-        switch (testResult.score) {
-            case 0 :
-                return "grey";
-            case 1 :
+        let score = generateScore()
+        switch (score) {
+            case 0,1 :
                 return "red";
             case 2 : 
                 return "orange";
             case 3 :
                 return "green";
             default:
-                return "none"
+                return "grey"
         }
     }
 
-    const changeProgressBarColor = () => ({
-        width: `${num}%`,
+    const changeProgressBarColor = () => {
+        let score = generateScore()
+        let percentage = score == 0 ? 0 : (score/3) * 100
+        return {
+        width: `${percentage}%`,
         background: funcProgressColor(),
         height: "10px",
-    })
-
-
+    }}
     return (
         <>
         <div style={{color: "white"}}>
@@ -81,7 +102,6 @@ export const PasswordComplexity = (
                 color: funcProgressColor()
             }}>
                 {funcProgressLabel()}
-
             </span>
         </div>
             <div style={{
@@ -98,7 +118,7 @@ export const PasswordComplexity = (
             </div>
             <ul>
                 <PasswordStrenghIndicatorItem 
-                text="Have at least 8 characters"
+                text="Have at least 9 characters"
                 isValid={passwordValidity?.minLength}
                 />
                 <PasswordStrenghIndicatorItem 
@@ -117,9 +137,7 @@ export const PasswordComplexity = (
                 text="Have at least 1 number "
                 isValid={passwordValidity?.minNumbers}
                 />
-            </ul>
-            
+            </ul>           
         </>
     )
 }
-
